@@ -1,0 +1,2063 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>RasulOfAllah — trace any claim about Muhammad ﷺ to its source</title>
+<meta name="description" content="A claim-verification engine. Every saying carries its chain, its verdicts, what science says, and what we don't know." />
+<meta name="theme-color" content="#0A0A0B" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ink:    '#0A0A0B',
+        vellum: '#EDE9E3',
+        dust:   '#8A867F',
+        edge:   '#1E1D1F',
+        amber:  '#F97316',
+        alarm:  '#C2453B',
+      },
+      fontFamily: {
+        ui:    ['Inter', 'system-ui', 'sans-serif'],
+        trans: ['"Crimson Pro"', 'Georgia', 'serif'],
+        ar:    ['Amiri', '"Scheherazade New"', '"Noto Naskh Arabic"', 'serif'],
+      },
+    },
+  },
+}
+</script>
+<style>
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { background:#0A0A0B; color:#EDE9E3; font-family:Inter,system-ui,sans-serif; font-size:15px; }
+  ::selection { background:#F97316; color:#0A0A0B; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid #F97316; outline-offset: 3px; border-radius: 2px; }
+
+  /* ─── Registers ───────────────────────────────────────────── */
+  .ar {
+    font-family: Amiri, "Scheherazade New", "Noto Naskh Arabic", serif;
+    font-size: 22px;
+    line-height: 2.15;
+    direction: rtl;
+    text-align: right;
+    color: #EDE9E3;
+    font-feature-settings: "liga" 1, "calt" 1, "rlig" 1;
+    margin-top: 1.25rem;
+    word-spacing: 0.04em;
+  }
+  @media (max-width: 480px) { .ar { font-size: 20px; line-height: 2.1; } }
+
+  /* The honorific ﷺ is U+FDFA — a ligature most Latin faces lack. */
+  .hon {
+    font-family: Amiri, "Scheherazade New", "Noto Naskh Arabic", serif;
+    font-size: .92em;
+    line-height: 1;
+    padding: 0 .05em;
+    white-space: nowrap;
+  }
+
+  .trans {
+    font-family: "Crimson Pro", Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #EDE9E3;
+    margin-top: .875rem;
+    font-weight: 400;
+  }
+
+  /* ─── The spine ───────────────────────────────────────────── */
+  .narration { position: relative; padding: 2.5rem 0 2.5rem 2.75rem; }
+  .rail {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    pointer-events: none;
+  }
+  /* Grade lives entirely in weight and continuity — no colour slot. */
+  .rail[data-grade="sahih"] { background: #EDE9E3; }
+  .rail[data-grade="hasan"] { background: rgba(237,233,227,.34); }
+  .rail[data-grade="daif"]  { background-image: repeating-linear-gradient(to bottom, #EDE9E3 0 6px, transparent 6px 16px); }
+  .rail[data-grade="mawdu"] { background: none; }
+
+  .rail-nav {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+    background: rgba(237,233,227,.16);
+  }
+
+  .plain { font-size: 15px; line-height: 1.5; color: #EDE9E3; }
+  .tech  { font-size: 12px; line-height: 1.6; color: #8A867F; margin-top: .4rem; }
+  .tech .g { color: #EDE9E3; }
+
+  .narrator {
+    font-size: 13px; color: #EDE9E3; margin-top: 1.25rem;
+    letter-spacing: .005em;
+  }
+  .narrator::before {
+    content: ""; display: block; width: 18px; height: 1px;
+    background: #1E1D1F; margin-bottom: .625rem;
+  }
+
+  .trans-note { font-size: 11px; color: #8A867F; margin-top: .5rem; font-family: Inter, sans-serif; }
+
+  .prov {
+    margin-top: 1.5rem; padding-top: .875rem;
+    border-top: 1px solid #1E1D1F;
+    font-size: 12px; line-height: 1.8; color: #8A867F;
+    font-variant-numeric: tabular-nums;
+  }
+  .prov b { color: #EDE9E3; font-weight: 500; }
+
+  .chips { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: .375rem; }
+  .chip {
+    font-size: 11px; color: #8A867F; border: 1px solid #1E1D1F;
+    padding: .25rem .5rem; border-radius: 999px; text-decoration: none;
+    transition: border-color .15s, color .15s;
+    display: inline-flex; align-items: center; min-height: 26px;
+    background: none; cursor: pointer;
+  }
+  .chip:hover { border-color: #F97316; color: #EDE9E3; }
+  .chip.is-on { border-color: #F97316; color: #EDE9E3; }
+
+  .chain-toggle {
+    margin-top: .75rem; padding: .75rem 0;
+    min-height: 44px;
+    font-size: 12px; color: #F97316; background: none; border: 0;
+    cursor: pointer; display: inline-flex; align-items: center; gap: .5rem;
+    letter-spacing: .01em;
+  }
+  .chain-toggle .caret { transition: transform .2s; display:inline-block; }
+  .chain-toggle[aria-expanded="true"] .caret { transform: rotate(180deg); }
+
+  /* ─── Chain list (vertical, inside narration card) ────────── */
+  .chain { margin-top: 1.25rem; }
+  .chain-row { position: relative; padding-bottom: 1.5rem; }
+  .chain-row:last-child { padding-bottom: 0; }
+  .chain-node {
+    position: absolute;
+    left: -2.75rem; margin-left: -5px; top: 4px;
+    width: 12px; height: 12px; border-radius: 999px;
+    background: #0A0A0B; border: 2px solid #EDE9E3;
+  }
+  .chain-node[data-link="weak"]    { border-color: #8A867F; }
+  .chain-node[data-link="unknown"] { border-color: #8A867F; border-style: dashed; }
+  .chain-node[data-link="companion"] { border-color: #EDE9E3; background: #EDE9E3; }
+  .chain-name { font-size: 13px; color: #EDE9E3; line-height: 1.45; }
+  .chain-name .ar-name { font-family: Amiri, serif; font-size: 15px; color: #8A867F; margin-left: .4rem; }
+  .chain-meta { font-size: 11px; color: #8A867F; margin-top: .2rem; line-height: 1.6; }
+  .chain-meta .v-sound   { color: #EDE9E3; }
+  .chain-meta .v-weak    { color: #8A867F; }
+  .chain-meta .v-unknown { color: #8A867F; font-style: italic; }
+
+  .chain-note {
+    margin-top: 1.5rem; padding-top: .75rem; border-top: 1px solid #1E1D1F;
+    font-size: 11px; line-height: 1.7; color: #8A867F;
+  }
+
+  /* ─── Chain MAP (horizontal, subway style) ────────────────── */
+  .chainmap {
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 1rem;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    scrollbar-width: thin;
+  }
+  .chainmap::-webkit-scrollbar { height: 4px; }
+  .chainmap::-webkit-scrollbar-thumb { background: #1E1D1F; border-radius: 2px; }
+
+  .chainmap-track {
+    display: flex;
+    align-items: flex-start;
+    min-width: min-content;
+    padding: 1.5rem 0 0;
+  }
+  .chainmap-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 108px;
+    flex: none;
+    text-align: center;
+  }
+  .chainmap-station {
+    width: 14px; height: 14px; border-radius: 999px;
+    background: #0A0A0B; border: 2px solid #EDE9E3;
+    margin-bottom: 1rem;
+    position: relative;
+    flex: none;
+  }
+  .chainmap-station[data-link="weak"]      { border-color: #8A867F; }
+  .chainmap-station[data-link="unknown"]   { border-color: #8A867F; border-style: dashed; }
+  .chainmap-station[data-link="companion"] { background: #EDE9E3; border-color: #EDE9E3; }
+  .chainmap-station[data-link="prophet"]   { background: #EDE9E3; border-color: #EDE9E3; }
+  .chainmap-station[data-link="prophet"]::after {
+    content: ""; position: absolute; inset: -6px; border-radius: 999px;
+    border: 1px solid #EDE9E3; opacity: .35;
+  }
+
+  .chainmap-edge {
+    flex: 1;
+    min-width: 44px;
+    height: 2px;
+    background: #EDE9E3;
+    margin-top: 6px;
+    align-self: flex-start;
+    flex-shrink: 1;
+    margin-left: -2px; margin-right: -2px;
+  }
+  .chainmap-edge[data-link="hasan"] { background: rgba(237,233,227,.34); }
+  .chainmap-edge[data-link="weak"]  { background: rgba(237,233,227,.24); }
+  .chainmap-edge[data-link="gap"]   {
+    background: none;
+    background-image: repeating-linear-gradient(to right, #8A867F 0 5px, transparent 5px 12px);
+    height: 2px;
+  }
+
+  .chainmap-label {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 0 .25rem;
+    max-width: 118px;
+  }
+  .chainmap-name { font-size: 12px; color: #EDE9E3; line-height: 1.3; }
+  .chainmap-place { font-size: 10px; color: #8A867F; line-height: 1.4; }
+  .chainmap-year { font-size: 10px; color: #8A867F; line-height: 1.4; font-variant-numeric: tabular-nums; }
+
+  /* chain map play state */
+  .chainmap[data-play="on"] .chainmap-node,
+  .chainmap[data-play="on"] .chainmap-edge {
+    opacity: 0;
+    animation: nodeIn .55s ease-out forwards;
+  }
+  @keyframes nodeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── Five-part claim page ────────────────────────────────── */
+  .claim-page { position: relative; }
+  .claim-spine {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+    background: rgba(237,233,227,.13);
+  }
+  @media (max-width: 640px) { .claim-spine { display: none; } }
+
+  .part {
+    position: relative;
+    padding: 3rem 0 3rem 0;
+    border-bottom: 1px solid #1E1D1F;
+  }
+  @media (min-width: 641px) { .part { padding-left: 2.5rem; } }
+  .part:last-child { border-bottom: 0; }
+
+  .part-num {
+    font-size: 11px;
+    color: #8A867F;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .part-num::after {
+    content: ""; flex: 1; height: 1px; background: #1E1D1F; max-width: 48px;
+  }
+
+  /* ─── Claim hero ──────────────────────────────────────────── */
+  .claim-hero-text {
+    font-family: "Crimson Pro", Georgia, serif;
+    font-size: 32px;
+    line-height: 1.35;
+    color: #EDE9E3;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+  @media (max-width: 640px) { .claim-hero-text { font-size: 26px; } }
+  @media (max-width: 420px) { .claim-hero-text { font-size: 23px; } }
+
+  /* ─── Four tiles ──────────────────────────────────────────── */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: #1E1D1F;
+    border: 1px solid #1E1D1F;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 700px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+
+  .tile {
+    background: #0A0A0B;
+    padding: 1.25rem 1rem;
+    text-align: left;
+    text-decoration: none;
+    display: flex; flex-direction: column;
+    min-height: 92px;
+    gap: .5rem;
+    transition: background .15s;
+    border: 0; cursor: pointer;
+    font-family: inherit;
+  }
+  .tile:hover { background: #0d0d0f; }
+  .tile-label { font-size: 13px; color: #EDE9E3; }
+  .tile-meta { font-size: 11px; color: #8A867F; margin-top: auto; line-height: 1.5; }
+
+  /* ─── Verdicts ────────────────────────────────────────────── */
+  .verdict-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .25rem;
+    padding: 1.125rem 0;
+    border-bottom: 1px solid #1E1D1F;
+  }
+  .verdict-row:last-child { border-bottom: 0; }
+  @media (min-width: 560px) {
+    .verdict-row { grid-template-columns: 140px 1fr; gap: 1.5rem; }
+  }
+  .verdict-scholar { font-size: 13px; color: #EDE9E3; }
+  .verdict-grade {
+    font-size: 12px;
+    color: #EDE9E3;
+    font-variant-numeric: tabular-nums;
+  }
+  .verdict-source { font-size: 11px; color: #8A867F; margin-top: .25rem; line-height: 1.6; }
+  .verdict-note { font-size: 12px; color: #8A867F; margin-top: .4rem; line-height: 1.65; }
+
+  .verdict-primary {
+    position: relative;
+    padding-left: 1rem;
+  }
+  .verdict-primary::before {
+    content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; background: #EDE9E3;
+  }
+  .verdict-secondary::before {
+    content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; background: rgba(237,233,227,.28);
+  }
+
+  /* ─── Science states ──────────────────────────────────────── */
+  .sci-state {
+    display: inline-flex; align-items: center; gap: .6rem;
+    font-size: 12px; color: #EDE9E3;
+    letter-spacing: .02em;
+  }
+  .sci-mark {
+    display: inline-block; width: 10px; height: 10px;
+    border: 1.5px solid #EDE9E3; flex: none;
+  }
+  .sci-mark[data-state="corroborated"] { background: #EDE9E3; }
+  .sci-mark[data-state="consistent"]   { background: linear-gradient(135deg, #EDE9E3 50%, transparent 50%); }
+  .sci-mark[data-state="unverified"]   { border-style: dashed; }
+  .sci-mark[data-state="na"]           { border-color: #8A867F; border-style: dashed; }
+
+  .sci-summary {
+    font-family: "Crimson Pro", Georgia, serif;
+    font-size: 17px; line-height: 1.7; color: #EDE9E3;
+    margin-top: 1.25rem;
+  }
+  .sci-caveat {
+    margin-top: 1.5rem;
+    padding: 1rem 1.125rem;
+    border-left: 2px solid #1E1D1F;
+    font-size: 13px; line-height: 1.75; color: #8A867F;
+  }
+
+  /* ─── Doubt panel ─────────────────────────────────────────── */
+  .doubt-item {
+    position: relative;
+    padding: .875rem 0 .875rem 1.5rem;
+    font-size: 13px; line-height: 1.75; color: #EDE9E3;
+    border-bottom: 1px solid #1E1D1F;
+  }
+  .doubt-item:last-child { border-bottom: 0; }
+  .doubt-item::before {
+    content: "—"; position: absolute; left: 0; top: .875rem;
+    color: #8A867F;
+  }
+
+  /* ─── Share card preview ──────────────────────────────────── */
+  .sharecard {
+    background: #0A0A0B;
+    border: 1px solid #1E1D1F;
+    border-radius: 2px;
+    padding: 1.5rem;
+    max-width: 380px;
+    position: relative;
+  }
+  .sharecard-rail {
+    position: absolute; left: 0; top: 1.5rem; bottom: 1.5rem; width: 2px;
+  }
+  .sharecard-rail[data-grade="sahih"] { background: #EDE9E3; }
+  .sharecard-rail[data-grade="hasan"] { background: rgba(237,233,227,.34); }
+  .sharecard-rail[data-grade="daif"]  { background-image: repeating-linear-gradient(to bottom, #EDE9E3 0 5px, transparent 5px 12px); }
+  .sharecard-rail[data-grade="mawdu"] { background: none; }
+
+  /* ─── Section rows ────────────────────────────────────────── */
+  .sec-row {
+    position: relative; display: flex; align-items: baseline; justify-content: space-between;
+    padding: 1.05rem 0 1.05rem 2.25rem;
+    text-decoration: none; gap: 1rem;
+    transition: opacity .15s;
+  }
+  .sec-row:hover { opacity: .72; }
+  .sec-row .name { font-size: 16px; color: #EDE9E3; }
+  .sec-row .count { font-size: 12px; color: #8A867F; font-variant-numeric: tabular-nums; }
+
+  /* ─── Counts ──────────────────────────────────────────────── */
+  .count-row { display: flex; align-items: baseline; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #1E1D1F; gap: 1rem; }
+  .count-row:last-child { border-bottom: 0; }
+  .count-row .k { font-size: 13px; color: #8A867F; }
+  .count-row .v { font-size: 14px; color: #EDE9E3; font-variant-numeric: tabular-nums; }
+
+  /* ─── Buttons / inputs ────────────────────────────────────── */
+  .btn {
+    min-height: 44px; padding: 0 1.125rem;
+    font-size: 13px; letter-spacing: .01em;
+    background: #F97316; color: #0A0A0B; border: 0; border-radius: 2px;
+    cursor: pointer; font-weight: 500;
+    display: inline-flex; align-items: center;
+    text-decoration: none;
+  }
+  .btn:hover { background: #fb8b3d; }
+  .btn-ghost {
+    min-height: 44px; padding: 0 1rem; font-size: 13px;
+    background: none; color: #8A867F; border: 1px solid #1E1D1F; border-radius: 2px; cursor: pointer;
+    display: inline-flex; align-items: center; text-decoration: none;
+  }
+  .btn-ghost:hover { color: #EDE9E3; border-color: #8A867F; }
+
+  textarea, input[type="text"] {
+    width: 100%; background: #0A0A0B; color: #EDE9E3;
+    border: 1px solid #1E1D1F; border-radius: 2px;
+    padding: .875rem 1rem; font-size: 15px; line-height: 1.6;
+    font-family: Inter, sans-serif; resize: vertical;
+  }
+  textarea:focus, input[type="text"]:focus { outline: none; border-color: #F97316; }
+  textarea::placeholder, input::placeholder { color: #8A867F; }
+
+  /* ─── Boundary screen ─────────────────────────────────────── */
+  .boundary { padding: 3.5rem 0 3.5rem 2.75rem; position: relative; }
+
+  /* ─── Settings ────────────────────────────────────────────── */
+  .popover {
+    position: absolute; right: 0; top: calc(100% + .5rem);
+    background: #0A0A0B; border: 1px solid #1E1D1F; border-radius: 2px;
+    width: 260px; padding: 1rem; z-index: 60;
+    box-shadow: 0 12px 40px rgba(0,0,0,.7);
+  }
+  .sw { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .55rem 0; }
+  .sw label { font-size: 13px; color: #EDE9E3; cursor: pointer; }
+  .sw .sub { font-size: 11px; color: #8A867F; margin-top: .1rem; }
+  .sw input[type="checkbox"] { appearance: none; width: 34px; height: 20px; border-radius: 999px; background: #1E1D1F; position: relative; cursor: pointer; flex: none; transition: background .15s; }
+  .sw input[type="checkbox"]::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:999px; background:#8A867F; transition: transform .15s, background .15s; }
+  .sw input[type="checkbox"]:checked { background: #F97316; }
+  .sw input[type="checkbox"]:checked::after { transform: translateX(14px); background: #0A0A0B; }
+
+  .badge {
+    display: inline-block; font-size: 10px; letter-spacing: .04em;
+    color: #8A867F; border: 1px solid #1E1D1F; padding: .15rem .4rem;
+    border-radius: 2px; text-transform: none;
+  }
+  .hairline { height: 1px; background: #1E1D1F; border: 0; }
+
+  /* ─── Claim feed item ─────────────────────────────────────── */
+  .feed-item {
+    display: block;
+    padding: 1.5rem 0 1.5rem 1.75rem;
+    position: relative;
+    text-decoration: none;
+    border-bottom: 1px solid #1E1D1F;
+    transition: background .15s;
+  }
+  .feed-item:last-child { border-bottom: 0; }
+  .feed-item:hover { background: rgba(237,233,227,.015); }
+  .feed-rail {
+    position: absolute; left: 0; top: 1.5rem; bottom: 1.5rem; width: 2px;
+  }
+  .feed-rail[data-grade="sahih"] { background: #EDE9E3; }
+  .feed-rail[data-grade="hasan"] { background: rgba(237,233,227,.34); }
+  .feed-rail[data-grade="daif"]  { background-image: repeating-linear-gradient(to bottom, #EDE9E3 0 5px, transparent 5px 12px); }
+  .feed-rail[data-grade="mawdu"] { background: none; border-left: 1px dashed #1E1D1F; width: 0; }
+
+  .feed-claim {
+    font-family: "Crimson Pro", Georgia, serif;
+    font-size: 19px; line-height: 1.45; color: #EDE9E3;
+  }
+  @media (max-width: 480px) { .feed-claim { font-size: 17px; } }
+  .feed-meta { font-size: 11px; color: #8A867F; margin-top: .75rem; font-variant-numeric: tabular-nums; line-height: 1.6; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="min-h-screen flex flex-col">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="sticky top-0 z-50 bg-ink/92 backdrop-blur-md border-b border-edge">
+    <div class="max-w-[46rem] mx-auto px-5 h-14 flex items-center justify-between gap-4">
+      <a href="#/" class="text-[13px] tracking-[.02em] text-vellum no-underline whitespace-nowrap">
+        Rasul<span class="text-dust">Of</span>Allah
+      </a>
+
+      <div class="flex items-center gap-1">
+        <nav class="flex items-center gap-1" aria-label="Primary">
+          <a href="#/claims" data-nav="claims" class="text-[12px] text-dust hover:text-vellum px-2 py-2 no-underline transition-colors hidden sm:inline-block">Claims</a>
+          <a href="#/verify" data-nav="verify" class="text-[12px] text-dust hover:text-vellum px-2 py-2 no-underline transition-colors">Verify</a>
+          <a href="#/theme" data-nav="theme" class="text-[12px] text-dust hover:text-vellum px-2 py-2 no-underline transition-colors">Theme</a>
+          <a href="#/coverage" data-nav="coverage" class="text-[12px] text-dust hover:text-vellum px-2 py-2 no-underline transition-colors hidden sm:inline-block">Coverage</a>
+        </nav>
+        <div class="relative">
+          <button id="settingsBtn" class="text-[12px] text-dust hover:text-vellum px-2 py-2 min-h-[44px] bg-transparent border-0 cursor-pointer" aria-haspopup="true" aria-expanded="false" aria-label="Display settings">Aa</button>
+          <div id="settingsPanel" class="popover hidden" role="dialog" aria-label="Display settings"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Prototype notice ───────────────────────────────────── -->
+  <div class="border-b border-edge bg-ink">
+    <div class="max-w-[46rem] mx-auto px-5 py-2.5 flex items-start gap-2.5">
+      <span class="text-[10px] text-dust border border-edge px-1.5 py-0.5 rounded-[2px] flex-none mt-[1px]">PROTOTYPE</span>
+      <p class="text-[11px] leading-[1.6] text-dust">
+        Interface validation build. Gradings, chains and science summaries shown are illustrative unless marked verified.
+        <a href="#/coverage" class="text-amber no-underline">Data status →</a>
+      </p>
+    </div>
+  </div>
+
+  <main id="app" class="flex-1"></main>
+
+  <footer class="border-t border-edge mt-20">
+    <div class="max-w-[46rem] mx-auto px-5 py-8">
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-[12px] text-dust">
+        <a href="#/coverage" class="hover:text-vellum no-underline">Coverage manifest</a>
+        <a href="#/how" class="hover:text-vellum no-underline">How a chain works</a>
+        <a href="#/verify" class="hover:text-vellum no-underline">Verify a quote</a>
+      </div>
+      <p class="text-[11px] text-dust leading-[1.7] mt-5 max-w-[34rem]">
+        Nothing here is a fatwa. Grades are rulings by named scholars, not facts, and scholars differ.
+        Where they differ, both rulings are shown.
+      </p>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+const state = {
+  honorifics: load('honorifics', true),
+  arabic:     load('arabic', true),
+  tashkeel:   load('tashkeel', true),
+  expanded:   new Set(),
+  showDisagreement: load('disagreement', false),
+  chainPlay:  new Set(),
+};
+
+function load(k, d) {
+  try { const v = localStorage.getItem('roa.' + k); return v === null ? d : v === '1'; }
+  catch (e) { return d; }
+}
+function save(k, v) { try { localStorage.setItem('roa.' + k, v ? '1' : '0'); } catch (e) {} }
+
+/* ═══════════════════════════════════════════════════════════════
+   HONORIFIC — structural, not editorial.
+   ﷺ = U+FDFA. Carries its own leading space so switching off
+   never leaves a double space behind.
+   ═══════════════════════════════════════════════════════════════ */
+const HON_GLYPH = '<span class="hon">ﷺ</span>';
+function hon(s) {
+  return s.replace(/\{\{saw\}\}/g, state.honorifics ? ' ' + HON_GLYPH : '');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ARABIC
+   ═══════════════════════════════════════════════════════════════ */
+const TASHKEEL = /[ؐ-ًؚ-ٰٟۖ-ۭ]/g;
+function ar(s) {
+  if (!state.arabic) return '';
+  return state.tashkeel ? s : s.replace(TASHKEEL, '');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA
+   ───────────────────────────────────────────────────────────────
+   HONESTY RULES APPLIED:
+   • Reference + narrator for bukhari-2079 come from the brief and
+     are treated as given. Bukhari 1 and 13 are mass-transmitted
+     and their positions are stable; still flagged for verification.
+   • Verdicts marked `verified: false` are ILLUSTRATIVE ONLY and
+     must be replaced with sourced rulings before any launch.
+   • Chains are marked sample data. Do not cite.
+   • Science summaries cite the state honestly — mostly "unverified"
+     because that is the honest default.
+   ═══════════════════════════════════════════════════════════════ */
+
+const NARRATIONS = [
+  /* ── 1. Intentions ─────────────────────────────────────────── */
+  {
+    id: 'bukhari-1',
+    grade: 'sahih',
+    gradeLabel: 'ṣaḥīḥ',
+    arabic: 'إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى',
+    narrator: 'ʿUmar b. al-Khaṭṭāb',
+    translation: 'Actions are only by intentions, and every person will have only what he intended.',
+    translator: 'working translation — not a licensed edition',
+    collection: 'Ṣaḥīḥ al-Bukhārī',
+    number: '1',
+    book: 'Kitāb Badʾ al-Waḥy',
+    ref: '1:1',
+    verifyNote: 'Reference and position widely cited; verify against printed edition before publishing.',
+    sections: ['self', 'worship', 'work'],
+
+    verdicts: [
+      { scholar: 'al-Bukhārī', gradeLabel: 'ṣaḥīḥ', source: 'inclusion in al-Jāmiʿ al-Musnad al-Ṣaḥīḥ', verified: true,
+        note: 'Placement as the opening narration of the collection is itself a grading act.' },
+      { scholar: 'al-Albānī', gradeLabel: 'ṣaḥīḥ', source: 'PLACEHOLDER — verify against printed work', verified: false,
+        note: 'Illustrative only.' },
+      { scholar: 'Ibn Ḥajar', gradeLabel: 'ṣaḥīḥ', source: 'PLACEHOLDER — verify against Fatḥ al-Bārī', verified: false,
+        note: 'Illustrative only.' },
+    ],
+
+    science: {
+      state: 'na',
+      summary: 'This is a claim about the interior states of persons, not about the natural world. Empirical science is not the right instrument for it, and we will not pretend otherwise by dressing it up.',
+      caveats: 'Behavioural research does study intention–action gaps. That research does not test this claim and we will not present it as though it does.',
+      sources: [],
+    },
+
+    doubt: [
+      'The wording "innamā al-aʿmāl bi-l-niyyāt" is mass-transmitted; the surrounding clauses vary between recensions.',
+      'The placement of this narration first in Bukhari is an editorial decision. It is often read as a statement about the whole collection. Bukhari never says so.',
+      'English translations of "niyyah" flatten a term with a long lexical history. "Intention" is a working substitute, not an equivalent.',
+    ],
+
+    chain: [
+      { name: 'al-Ḥumaydī, ʿAbdallāh b. al-Zubayr', ar: 'الحميدي', died: 'd. 219 AH', place: 'Mecca', link: 'sound', verdict: 'trusted, precise' },
+      { name: 'Sufyān b. ʿUyayna',                  ar: 'سفيان بن عيينة', died: 'd. 198 AH', place: 'Mecca', link: 'sound', verdict: 'trusted, firm in ḥadīth' },
+      { name: 'Yaḥyā b. Saʿīd al-Anṣārī',           ar: 'يحيى بن سعيد الأنصاري', died: 'd. 143 AH', place: 'Madīna', link: 'sound', verdict: 'trusted' },
+      { name: 'Muḥammad b. Ibrāhīm al-Taymī',       ar: 'محمد بن إبراهيم التيمي', died: 'd. 120 AH', place: 'Madīna', link: 'sound', verdict: 'trusted' },
+      { name: 'ʿAlqama b. Waqqāṣ al-Laythī',        ar: 'علقمة بن وقاص', died: 'd. ~86 AH', place: 'Madīna', link: 'sound', verdict: 'trusted' },
+      { name: 'ʿUmar b. al-Khaṭṭāb',                ar: 'عمر بن الخطاب', died: 'd. 23 AH', place: 'Madīna', link: 'companion', verdict: 'Companion — direct, undisputed' },
+    ],
+    sampleChain: true,
+  },
+
+  /* ── 2. Love for your brother ─────────────────────────────── */
+  {
+    id: 'bukhari-13',
+    grade: 'sahih',
+    gradeLabel: 'ṣaḥīḥ',
+    arabic: 'لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ',
+    narrator: 'Anas b. Mālik',
+    translation: 'None of you believes until he loves for his brother what he loves for himself.',
+    translator: 'working translation — not a licensed edition',
+    collection: 'Ṣaḥīḥ al-Bukhārī',
+    number: '13',
+    book: 'Kitāb al-Īmān',
+    ref: '2:7',
+    verifyNote: 'Widely cited position; verify against printed edition.',
+    sections: ['self', 'neighbour', 'family'],
+
+    verdicts: [
+      { scholar: 'al-Bukhārī', gradeLabel: 'ṣaḥīḥ', source: 'inclusion in al-Jāmiʿ al-Musnad al-Ṣaḥīḥ', verified: true, note: '' },
+      { scholar: 'Muslim', gradeLabel: 'ṣaḥīḥ', source: 'PLACEHOLDER — verify parallel in Ṣaḥīḥ Muslim', verified: false, note: 'Illustrative only.' },
+    ],
+
+    science: {
+      state: 'unverified',
+      summary: 'We looked for peer-reviewed research directly testing the claim that holding this attitude is necessary for belief. We found none, and we would not expect to — the claim is a definitional statement about the term "belief," not a prediction about behaviour.',
+      caveats: '',
+      sources: [],
+    },
+
+    doubt: [
+      'The phrase "his brother" — biological, co-religionist, or universal — is disputed across commentaries. Al-Nawawī and Ibn Ḥajar read it differently.',
+      '"Belief" here is a technical term in Islamic theology. English "belief" is not equivalent.',
+    ],
+
+    chain: [
+      { name: 'Musaddad b. Musarhad',        ar: 'مسدد', died: 'd. 228 AH', place: 'Baṣra', link: 'sound', verdict: 'trusted' },
+      { name: 'Yaḥyā b. Saʿīd al-Qaṭṭān',    ar: 'يحيى بن سعيد القطان', died: 'd. 198 AH', place: 'Baṣra', link: 'sound', verdict: 'trusted, rigorous' },
+      { name: 'Shuʿba b. al-Ḥajjāj',         ar: 'شعبة بن الحجاج', died: 'd. 160 AH', place: 'Baṣra', link: 'sound', verdict: 'trusted, amīr al-muʾminīn in ḥadīth' },
+      { name: 'Qatāda b. Diʿāma',            ar: 'قتادة بن دعامة', died: 'd. 117 AH', place: 'Baṣra', link: 'sound', verdict: 'trusted; noted for tadlīs — no ʿanʿana defect here' },
+      { name: 'Anas b. Mālik',               ar: 'أنس بن مالك', died: 'd. 93 AH', place: 'Baṣra', link: 'companion', verdict: 'Companion — direct, undisputed' },
+    ],
+    sampleChain: true,
+  },
+
+  /* ── 3. Sale option ───────────────────────────────────────── */
+  {
+    id: 'bukhari-2079',
+    grade: 'sahih',
+    gradeLabel: 'ṣaḥīḥ',
+    arabic: 'الْبَيِّعَانِ بِالْخِيَارِ مَا لَمْ يَتَفَرَّقَا، فَإِنْ صَدَقَا وَبَيَّنَا بُورِكَ لَهُمَا فِي بَيْعِهِمَا، وَإِنْ كَتَمَا وَكَذَبَا مُحِقَتْ بَرَكَةُ بَيْعِهِمَا',
+    narrator: 'Ḥakīm b. Ḥizām',
+    translation: 'The two parties to a sale retain the option so long as they have not parted. If they speak truthfully and make things clear, their sale is blessed. If they conceal and lie, the blessing of their sale is erased.',
+    translator: 'working translation — not a licensed edition',
+    collection: 'Ṣaḥīḥ al-Bukhārī',
+    number: '2079',
+    book: 'Kitāb al-Buyūʿ',
+    ref: '34:19',
+    verifyNote: 'Reference given in build brief as verified.',
+    sections: ['wealth', 'work'],
+
+    verdicts: [
+      { scholar: 'al-Bukhārī', gradeLabel: 'ṣaḥīḥ', source: 'inclusion in al-Jāmiʿ al-Musnad al-Ṣaḥīḥ', verified: true, note: '' },
+    ],
+
+    science: {
+      state: 'unverified',
+      summary: 'We looked for empirical research testing whether mutual transparency in a transaction produces what the narration calls barakah. We found none. "Barakah" is a theological category and does not map onto a measurable outcome.',
+      caveats: 'The behavioural-economics literature on disclosure and trust is relevant by analogy. It does not test this text and we will not present it as confirmation.',
+      sources: [],
+    },
+
+    doubt: [
+      'The scope of "mā lam yatafarraqā" — physically parting, or concluding the contract — was disputed between the Iraqi and Hijazi schools.',
+      'The narration contains two distinct claims: one about the option, one about blessing. They are often collapsed into one.',
+      'Ḥakīm b. Ḥizām was a merchant of the pre-Islamic era; some of his reports are read against that context.',
+    ],
+
+    chain: [
+      { name: 'ʿAbdallāh b. Yūsuf al-Tinnīsī', ar: 'عبد الله بن يوسف', died: 'd. 218 AH', place: 'Damascus', link: 'sound', verdict: 'trusted' },
+      { name: 'al-Layth b. Saʿd',              ar: 'الليث بن سعد', died: 'd. 175 AH', place: 'Fusṭāṭ', link: 'sound', verdict: 'trusted, faqīh of Egypt' },
+      { name: 'Ibn Shihāb al-Zuhrī',           ar: 'ابن شهاب الزهري', died: 'd. 124 AH', place: 'Madīna', link: 'sound', verdict: 'trusted, widely transmitted' },
+      { name: 'Saʿīd b. al-Musayyib',          ar: 'سعيد بن المسيب', died: 'd. 94 AH', place: 'Madīna', link: 'sound', verdict: 'trusted, one of the seven fuqahāʾ of Madīna' },
+      { name: 'Ḥakīm b. Ḥizām',                ar: 'حكيم بن حزام', died: 'd. 54 AH', place: 'Mecca', link: 'companion', verdict: 'Companion — direct, undisputed' },
+    ],
+    sampleChain: true,
+  },
+
+  /* ── 4. Strong believer ───────────────────────────────────── */
+  {
+    id: 'muslim-2664',
+    grade: 'sahih',
+    gradeLabel: 'ṣaḥīḥ',
+    arabic: 'الْمُؤْمِنُ الْقَوِيُّ خَيْرٌ وَأَحَبُّ إِلَى اللَّهِ مِنَ الْمُؤْمِنِ الضَّعِيفِ، وَفِي كُلٍّ خَيْرٌ',
+    narrator: 'Abū Hurayra',
+    translation: 'The strong believer is better and more beloved to God than the weak believer — and in each there is good.',
+    translator: 'working translation — not a licensed edition',
+    collection: 'Ṣaḥīḥ Muslim',
+    number: 'PLACEHOLDER',
+    book: 'Kitāb al-Qadar',
+    ref: '—',
+    verifyNote: 'PLACEHOLDER reference. Verify against printed edition before publishing.',
+    sections: ['self', 'body', 'worship'],
+
+    verdicts: [
+      { scholar: 'Muslim', gradeLabel: 'ṣaḥīḥ', source: 'inclusion in his Ṣaḥīḥ', verified: true, note: '' },
+      { scholar: 'al-Albānī', gradeLabel: 'ṣaḥīḥ', source: 'PLACEHOLDER — verify against printed work', verified: false, note: 'Illustrative only.' },
+    ],
+
+    science: {
+      state: 'consistent',
+      summary: 'Physical strength and cardiovascular fitness do correlate with several measurable health outcomes. That correlation is real. It is also not what the narration is claiming — "strong" here is read by the commentators as strong in resolve and faith, not strong in body.',
+      caveats: 'The commentary tradition is near-unanimous that "al-qawī" is a quality of the inner person. We are noting the science because a reader might wonder. We are not claiming the narration predicted it.',
+      sources: [],
+    },
+
+    doubt: [
+      'English "strong" and Arabic "qawī" do not carve the same space. The commentaries read this as strength of conviction.',
+      'The second clause — "and in each there is good" — is sometimes treated as a separate narration. It is not.',
+      'Abū Hurayra narrates a very large number of reports; the classical literature discusses this at length. It is not a defect in him and we do not imply one.',
+    ],
+
+    chain: [
+      { name: 'PLACEHOLDER — chain not yet verified', ar: '', died: '—', place: '—', link: 'unknown', verdict: 'Isnad pending verification against printed edition.' },
+    ],
+    sampleChain: true,
+  },
+
+  /* ── 5. 360 joints (circulating claim) ────────────────────── */
+  {
+    id: 'muslim-360-joints',
+    grade: 'sahih',
+    gradeLabel: 'ṣaḥīḥ',
+    arabic: 'إِنَّ لِكُلِّ إِنْسَانٍ ثَلَاثَمِائَةٍ وَسِتِّينَ مَفْصِلًا',
+    narrator: 'PLACEHOLDER — verify narrator',
+    translation: 'Every human being has three hundred and sixty joints.',
+    translator: 'working translation — not a licensed edition',
+    collection: 'Ṣaḥīḥ Muslim',
+    number: 'PLACEHOLDER',
+    book: 'PLACEHOLDER',
+    ref: '—',
+    verifyNote: 'PLACEHOLDER for the science-layer demonstration. Verify reference and grading against a printed edition before any publication.',
+    sections: ['body', 'self'],
+
+    verdicts: [
+      { scholar: 'Muslim', gradeLabel: 'ṣaḥīḥ', source: 'PLACEHOLDER — verify inclusion', verified: false, note: 'Illustrative.' },
+    ],
+
+    science: {
+      state: 'unverified',
+      summary: 'Modern anatomy does not yield a single consensus number for "joints." Counts vary between sources depending on whether synarthroses, sutures, and cartilaginous junctions are included. Some classifications land near 360; most do not.',
+      caveats: 'This is a case where the science layer must resist the urge to confirm or deny. The number is a classification artefact. The narration uses a number in a way that may not be a claim about anatomical count at all.',
+      sources: [],
+    },
+
+    doubt: [
+      'The number 360 may be a rhetorical or symbolic figure rather than an anatomical count. Classical commentaries are not unanimous.',
+      'The "science confirms" genre of Islamic content treats this as a settled match. It is not settled.',
+      'We include this claim as an example of a narration frequently circulated as a scientific miracle. We do not endorse that framing, and we do not deny the narration — those are separate questions.',
+    ],
+
+    chain: [
+      { name: 'PLACEHOLDER — chain not yet verified', ar: '', died: '—', place: '—', link: 'unknown', verdict: 'Isnad pending verification.' },
+    ],
+    sampleChain: true,
+  },
+
+  /* ── 6. Placeholder ḥasan ─────────────────────────────────── */
+  {
+    id: 'placeholder-hasan',
+    placeholder: true,
+    grade: 'hasan',
+    gradeLabel: 'ḥasan',
+    arabic: '—',
+    narrator: 'PLACEHOLDER',
+    translation: 'Placeholder text. This entry exists so the ḥasan rail — unbroken but lighter — can be reviewed against the ṣaḥīḥ rail.',
+    translator: 'no translation source assigned',
+    collection: 'PLACEHOLDER',
+    number: '—',
+    book: '—',
+    ref: '—',
+    verifyNote: '',
+    sections: ['knowledge'],
+
+    verdicts: [
+      { scholar: 'PLACEHOLDER', gradeLabel: 'ḥasan', source: 'not a real ruling', verified: false, note: 'Illustrative only.' },
+    ],
+    science: { state: 'unverified', summary: 'Placeholder.', caveats: '', sources: [] },
+    doubt: ['Placeholder entry — not a real narration.'],
+    chain: [ { name: 'PLACEHOLDER — no chain data', ar: '', died: '—', place: '—', link: 'weak', verdict: 'Illustrative only.' } ],
+    sampleChain: true,
+  },
+
+  /* ── 7. Placeholder ḍaʿīf ─────────────────────────────────── */
+  {
+    id: 'placeholder-daif',
+    placeholder: true,
+    grade: 'daif',
+    gradeLabel: 'ḍaʿīf',
+    arabic: '—',
+    narrator: 'PLACEHOLDER',
+    translation: 'Placeholder text. Weak narrations are shown here deliberately, clearly marked. An index that shows only its strongest material is a curated index, and curation is not the same as truth.',
+    translator: 'no translation source assigned',
+    collection: 'PLACEHOLDER',
+    number: '—',
+    book: '—',
+    ref: '—',
+    verifyNote: '',
+    sections: ['time'],
+
+    verdicts: [
+      { scholar: 'PLACEHOLDER', gradeLabel: 'ḍaʿīf', source: 'not a real ruling', verified: false, note: 'Illustrative only.' },
+    ],
+    science: { state: 'unverified', summary: 'Placeholder.', caveats: '', sources: [] },
+    doubt: ['Placeholder entry — not a real narration.'],
+    chain: [ { name: 'PLACEHOLDER — break between links 3 and 4', ar: '', died: '—', place: '—', link: 'weak', verdict: 'Illustrative only.' } ],
+    sampleChain: true,
+  },
+
+  /* ── 8. Placeholder mawḍūʿ ────────────────────────────────── */
+  {
+    id: 'placeholder-mawdu',
+    placeholder: true,
+    grade: 'mawdu',
+    gradeLabel: 'mawḍūʿ',
+    arabic: '—',
+    narrator: 'PLACEHOLDER',
+    translation: 'Placeholder text. There is no chain to draw. The report has no basis in the transmission record.',
+    translator: 'no translation source assigned',
+    collection: 'PLACEHOLDER',
+    number: '—',
+    book: '—',
+    ref: '—',
+    verifyNote: '',
+    sections: ['power'],
+
+    verdicts: [
+      { scholar: 'PLACEHOLDER', gradeLabel: 'mawḍūʿ', source: 'not a real ruling', verified: false, note: 'Illustrative only.' },
+    ],
+    science: { state: 'na', summary: 'Not applicable — the narration is not established.', caveats: '', sources: [] },
+    doubt: ['Placeholder entry — not a real narration.'],
+    chain: [],
+    sampleChain: true,
+  },
+];
+
+/* ── CLAIMS — the entry unit ────────────────────────────────────
+   A claim is not a hadith. A claim is what somebody says the
+   Prophet said. It can map to a narration, or to nothing.
+   ─────────────────────────────────────────────────────────── */
+const CLAIMS = [
+  { id: 'intentions',      narrationId: 'bukhari-1',        text: 'Actions are only by intentions.', tags: ['self','worship','work'], featured: true },
+  { id: 'brother-love',    narrationId: 'bukhari-13',       text: 'None of you truly believes until he loves for his brother what he loves for himself.', tags: ['self','neighbour'] },
+  { id: 'sale-option',     narrationId: 'bukhari-2079',     text: 'Both parties to a sale retain the option to cancel until they part.', tags: ['wealth','work'] },
+  { id: 'strong-believer', narrationId: 'muslim-2664',      text: 'The strong believer is better and more beloved to God than the weak believer.', tags: ['self','body'] },
+  { id: '360-joints',      narrationId: 'muslim-360-joints',text: 'The human body has three hundred and sixty joints.', tags: ['body'] },
+  { id: 'love-of-country', narrationId: null,               text: 'Love of one\'s country is part of faith.', tags: [], notfound: true },
+];
+
+const SECTIONS = [
+  { id: 'self',      name: 'Self',      count: 312,  note: 'Interior states, intention, character, what a person owes himself.' },
+  { id: 'body',      name: 'Body',      count: 188,  note: 'Food, illness, sleep, dress, physical habit. Not medicine — reported practice.' },
+  { id: 'family',    name: 'Family',    count: 401,  note: 'Parents, children, spouses, kinship. Excludes inheritance law, which sits under Wealth.' },
+  { id: 'wealth',    name: 'Wealth',    count: 142,  note: 'Earning, trade, debt, contract, charity. Excludes state fiscal policy, which sits under Power.' },
+  { id: 'work',      name: 'Work',      count: 97,   note: 'Labour, craft, wage, employment, the ethics of the transaction.' },
+  { id: 'power',     name: 'Power',     count: 156,  note: 'Authority, governance, judgement, war, and the limits of each.' },
+  { id: 'knowledge', name: 'Knowledge', count: 284,  note: 'Learning, teaching, transmission, and the ethics of speech about the religion.' },
+  { id: 'neighbour', name: 'Neighbour', count: 119,  note: 'The person adjacent to you, and the stranger. Hospitality, harm, proximity.' },
+  { id: 'worship',   name: 'Worship',   count: 1204, note: 'Prayer, fasting, pilgrimage, remembrance. The largest section by volume.' },
+  { id: 'time',      name: 'Time',      count: 73,   note: 'Days, seasons, the passing of a life, and what is said about deferral.' },
+];
+
+const COLLECTIONS = [
+  { id: 'bukhari', name: 'Ṣaḥīḥ al-Bukhārī', note: 'al-Jāmiʿ al-Musnad al-Ṣaḥīḥ' },
+  { id: 'muslim',  name: 'Ṣaḥīḥ Muslim',      note: 'no authorial chapter headings' },
+  { id: 'abudawud',name: 'Sunan Abī Dāwūd',   note: '' },
+  { id: 'tirmidhi',name: 'Jāmiʿ al-Tirmidhī', note: '' },
+  { id: 'nasai',   name: 'Sunan al-Nasāʾī',   note: '' },
+  { id: 'ibnmajah',name: 'Sunan Ibn Mājah',   note: '' },
+  { id: 'ahmad',   name: 'Musnad Aḥmad',      note: 'chapters 8–30 absent from source data' },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const byId = id => NARRATIONS.find(n => n.id === id);
+const claimById = id => CLAIMS.find(c => c.id === id);
+const sectionById = id => SECTIONS.find(s => s.id === id);
+const narrationsIn = sid => NARRATIONS.filter(n => n.sections.includes(sid));
+
+/* Verdict consensus helper.
+   Not a judgement about truth — a count of how many rulings we hold
+   and whether they agree with each other on the label. */
+function verdictSummary(n) {
+  if (!n.verdicts || !n.verdicts.length) return { label: 'no grading held', count: 0, consensus: false };
+  const labels = [...new Set(n.verdicts.map(v => v.gradeLabel))];
+  return {
+    label: labels.length === 1 ? labels[0] : 'scholars differ',
+    count: n.verdicts.length,
+    consensus: labels.length === 1,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Narration card (used on Read / Section pages) ────────────── */
+function renderNarration(n) {
+  const open = state.expanded.has(n.id);
+  const arabicText = ar(n.arabic);
+  const vs = verdictSummary(n);
+  const plain = n.grade === 'sahih' ? 'Chain intact, narrators trusted throughout.'
+              : n.grade === 'hasan' ? 'Chain intact, but at least one narrator is lighter in memory than the standard requires.'
+              : n.grade === 'daif'  ? 'Chain has a defect. The defect is usually a break.'
+              : n.grade === 'mawdu' ? 'No chain to show. There is nothing underneath this.'
+              : '';
+
+  return `
+  <article class="narration" id="h-${esc(n.id)}">
+    <div class="rail" data-grade="${esc(n.grade)}" aria-hidden="true"></div>
+
+    ${n.placeholder ? `<p class="text-[10px] text-dust border border-edge px-1.5 py-0.5 rounded-[2px] inline-block mb-4">PLACEHOLDER — not a real narration</p>` : ''}
+
+    ${plain ? `<p class="plain">${esc(plain)}</p>` : ''}
+
+    <p class="tech">
+      <span class="g">${esc(n.gradeLabel)}</span>
+      <span class="text-edge"> · </span>
+      ${esc(n.verdicts && n.verdicts[0] ? n.verdicts[0].scholar : '—')}
+      ${vs.consensus ? '' : `<span class="text-edge"> · </span> ${vs.count} rulings held, scholars differ`}
+    </p>
+
+    ${arabicText ? `<p class="ar" lang="ar" dir="rtl">${esc(arabicText)}</p>` : ''}
+
+    <p class="narrator">Narrated by ${esc(n.narrator)}</p>
+
+    <p class="trans">${esc(n.translation)}</p>
+    <p class="trans-note">${esc(n.translator)}</p>
+
+    <div class="prov">
+      <div><b>${esc(n.collection)}</b> ${esc(n.number)}</div>
+      <div>${esc(n.book)} ${esc(n.ref)}</div>
+      ${n.verifyNote ? `<div class="mt-1">${esc(n.verifyNote)}</div>` : ''}
+    </div>
+
+    <div class="chips">
+      ${n.sections.map(sid => {
+        const s = sectionById(sid);
+        return s ? `<a class="chip" href="#/section/${esc(sid)}">${esc(s.name)}</a>` : '';
+      }).join('')}
+      ${n.verdicts && n.verdicts.length ? `<a class="chip" href="#/claim/${esc(claimForNarration(n.id))}">Full claim page</a>` : ''}
+    </div>
+
+    ${n.chain && n.chain.length ? `
+    <button class="chain-toggle" data-toggle="${esc(n.id)}" aria-expanded="${open}" aria-controls="chain-${esc(n.id)}">
+      <span class="caret">⌄</span>
+      <span>${open ? 'Hide chain' : 'Show chain'}</span>
+    </button>
+    ${open ? renderChainList(n) : ''}
+    ` : ''}
+  </article>`;
+}
+
+function claimForNarration(id) {
+  const c = CLAIMS.find(c => c.narrationId === id);
+  return c ? c.id : '';
+}
+
+/* ── Chain list (vertical, inside narration card) ─────────────── */
+function renderChainList(n) {
+  return `
+  <div class="chain" id="chain-${esc(n.id)}">
+    ${n.chain.map(c => `
+      <div class="chain-row">
+        <span class="chain-node" data-link="${esc(c.link)}" aria-hidden="true"></span>
+        <div class="chain-name">
+          ${esc(c.name)}${c.ar ? `<span class="ar-name" lang="ar" dir="rtl">${esc(ar(c.ar) || c.ar)}</span>` : ''}
+        </div>
+        <div class="chain-meta">
+          ${esc(c.place)} <span class="text-edge"> · </span> ${esc(c.died)}
+          <span class="text-edge"> · </span>
+          <span class="v-${esc(c.link === 'companion' ? 'sound' : c.link)}">${esc(c.verdict)}</span>
+        </div>
+      </div>
+    `).join('')}
+    ${n.sampleChain ? `
+    <p class="chain-note">
+      Chain shown is sample data for interface review. It has not been verified against a printed edition
+      and must not be cited. In production every link carries its own source and every verdict carries a grader.
+    </p>` : ''}
+  </div>`;
+}
+
+/* ── Chain MAP (horizontal, subway style) ─────────────────────
+   The map reads chronologically left → right: Companion nearest
+   the Prophet ﷺ at the left, the collector's teacher at the right.
+   Nodes are stations. Edges are transmissions. Gaps are gaps.
+   ─────────────────────────────────────────────────────────── */
+function renderChainMap(n) {
+  if (!n.chain || !n.chain.length) return '';
+  const playing = state.chainPlay.has(n.id);
+  const nodes = n.chain;
+
+  // Visual order: chronological. chain array is already bottom-up
+  // (Companion first, Bukhari's teacher last), so reverse for a
+  // left-to-right read of "from the source outward".
+  const visual = [...nodes].reverse();
+
+  // Trailing edge — Prophet terminus.
+  const prophetEdge = `<div class="chainmap-edge" data-link="sound"></div>
+    <div class="chainmap-node">
+      <span class="chainmap-station" data-link="prophet"></span>
+      <div class="chainmap-label">
+        <span class="chainmap-name">Muhammad${hon('{{saw}}')}</span>
+        <span class="chainmap-place">—</span>
+        <span class="chainmap-year">d. 11 AH</span>
+      </div>
+    </div>`;
+
+  const cells = visual.map((c, i) => {
+    const station = `<div class="chainmap-node">
+      <span class="chainmap-station" data-link="${esc(c.link)}"></span>
+      <div class="chainmap-label">
+        <span class="chainmap-name">${esc(shortName(c.name))}</span>
+        <span class="chainmap-place">${esc(c.place)}</span>
+        <span class="chainmap-year">${esc(c.died)}</span>
+      </div>
+    </div>`;
+    // Edge between this node and the next (or to the Prophet terminus)
+    let edge = '';
+    if (i < visual.length - 1) {
+      const next = visual[i + 1];
+      // If either side is unknown, treat the edge as a gap.
+      const link = (c.link === 'unknown' || next.link === 'unknown') ? 'gap'
+                 : (c.link === 'weak' || next.link === 'weak') ? 'weak'
+                 : 'sound';
+      edge = `<div class="chainmap-edge" data-link="${link}"></div>`;
+    } else {
+      // Last node → Prophet terminus
+      const link = c.link === 'unknown' ? 'gap' : c.link === 'weak' ? 'weak' : 'sound';
+      edge = `<div class="chainmap-edge" data-link="${link}"></div>`;
+    }
+    return station + edge;
+  }).join('');
+
+  return `
+  <div class="chainmap" data-play="${playing ? 'on' : 'off'}" id="chainmap-${esc(n.id)}">
+    <div class="chainmap-track">
+      ${cells}
+      ${prophetEdge}
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mt-3">
+    <button class="btn-ghost" data-play-chain="${esc(n.id)}" style="min-height:36px; padding:0 .875rem; font-size:12px;">
+      ${playing ? 'Replay journey' : 'Animate the journey'}
+    </button>
+    <span class="text-[11px] text-dust">Left to right, Companion → collector. Edges show transmission.</span>
+  </div>`;
+}
+
+function shortName(full) {
+  // Trim long Arabic-derived names to a recognisable handle.
+  const strip = full.replace(/^(al-|Abū |Ibn |ʿAbd |ʿUmar|ʿAlqama|Anas|Ḥakīm|Saʿīd|Muḥammad|Yaḥyā|Sufyān|Qatāda|Shuʿba|Musaddad|ʿAbdallāh)/, m => m);
+  const parts = strip.split(/[,\s]+/);
+  if (parts.length <= 2) return full;
+  return parts.slice(0, 2).join(' ');
+}
+
+/* ── Verdicts, with disagreement toggle ───────────────────────── */
+function renderVerdicts(n) {
+  if (!n.verdicts || !n.verdicts.length) {
+    return `<p class="text-[13px] leading-[1.8] text-dust mt-2">No grading is held in our index for this narration. That is a gap in our data, not a claim about the narration.</p>`;
+  }
+  const all = n.verdicts;
+  const show = state.showDisagreement ? all : all.slice(0, 1);
+
+  const rows = show.map((v, i) => `
+    <div class="verdict-row">
+      <div class="verdict-scholar">${esc(v.scholar)}</div>
+      <div class="${i === 0 ? 'verdict-primary' : 'verdict-secondary'} pl-4">
+        <div class="verdict-grade">${esc(v.gradeLabel)}${v.verified ? '' : ' <span class="badge ml-1.5">illustrative</span>'}</div>
+        ${v.source ? `<div class="verdict-source">${esc(v.source)}</div>` : ''}
+        ${v.note ? `<div class="verdict-note">${esc(v.note)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  const hidden = all.length - show.length;
+
+  return `
+    <div>${rows}</div>
+    ${all.length > 1 ? `
+    <button class="chip mt-5" data-toggle-disagreement aria-pressed="${state.showDisagreement}">
+      ${state.showDisagreement ? 'Show primary ruling only' : `Show all ${all.length} rulings${hidden ? '' : ''}`}
+    </button>` : ''}
+  `;
+}
+
+/* ── Science panel — three states, no miracles ────────────────── */
+function renderScience(n) {
+  const s = n.science;
+  if (!s) return `<p class="text-[13px] text-dust">No science summary is held for this claim.</p>`;
+
+  const labels = {
+    corroborated: 'Corroborated',
+    consistent:   'Consistent',
+    unverified:   'Unverified',
+    na:           'Not applicable',
+  };
+
+  return `
+    <div class="sci-state">
+      <span class="sci-mark" data-state="${esc(s.state)}"></span>
+      <span>${esc(labels[s.state] || s.state)}</span>
+    </div>
+    <p class="sci-summary">${esc(s.summary)}</p>
+    ${s.caveats ? `<div class="sci-caveat">${esc(s.caveats)}</div>` : ''}
+    <p class="text-[11px] text-dust mt-5 leading-[1.7] max-w-[46ch]">
+      Correlation, not proof. The science layer never upgrades a narration's grade and never
+      downgrades one. A finding that agrees with a text does not authenticate the text.
+    </p>
+  `;
+}
+
+/* ── Doubt panel ──────────────────────────────────────────────── */
+function renderDoubt(n) {
+  if (!n.doubt || !n.doubt.length) {
+    return `<p class="text-[13px] text-dust">No doubt notes recorded for this claim yet. That is a gap we owe you a fix for — it is not a statement that none exist.</p>`;
+  }
+  return n.doubt.map(d => `<div class="doubt-item">${esc(d)}</div>`).join('');
+}
+
+/* ── Claim card (feed / index) ────────────────────────────────── */
+function renderClaimCard(c) {
+  const n = c.narrationId ? byId(c.narrationId) : null;
+  const grade = n ? n.grade : 'mawdu';
+  const vs = n ? verdictSummary(n) : { label: 'not in corpus', count: 0, consensus: true };
+  const meta = n
+    ? `${esc(n.gradeLabel)} · ${esc(n.collection)} ${esc(n.number)} · chain of ${n.chain.length}`
+    : `not in what we hold`;
+
+  return `
+  <a class="feed-item" href="#/claim/${esc(c.id)}">
+    <span class="feed-rail" data-grade="${esc(grade)}" aria-hidden="true"></span>
+    <div class="feed-claim">“${esc(c.text)}”</div>
+    <div class="feed-meta">${meta}</div>
+  </a>`;
+}
+
+/* ── Share card (self-authenticating) ─────────────────────────── */
+function renderShareCard(n, claim) {
+  const vs = verdictSummary(n);
+  return `
+  <div class="sharecard">
+    <span class="sharecard-rail" data-grade="${esc(n.grade)}" aria-hidden="true"></span>
+    <p class="text-[10px] text-dust mb-3">rasulofallah · claim card</p>
+    <p style="font-family:'Crimson Pro',Georgia,serif; font-size:19px; line-height:1.4; color:#EDE9E3;">“${esc(claim.text)}”</p>
+    <div class="mt-4 text-[11px] text-dust leading-[1.7] tabular-nums">
+      <div>${esc(n.gradeLabel)} · ${esc(n.verdicts[0] ? n.verdicts[0].scholar : '—')}</div>
+      <div>${esc(n.collection)} ${esc(n.number)}</div>
+      ${vs.consensus ? '' : `<div>${vs.count} rulings held — scholars differ</div>`}
+    </div>
+    <div class="mt-4 pt-3" style="border-top:1px solid #1E1D1F;">
+      <div class="text-[10px] text-dust leading-[1.6]">
+        Verify at rasulofallah /claim/${esc(claim.id)}<br>
+        Chain, verdicts, science, doubt — all visible on the card.
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VIEWS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Home — the claim is the hero ─────────────────────────────── */
+function viewHome() {
+  const featured = CLAIMS.find(c => c.featured) || CLAIMS[0];
+  const fn = featured.narrationId ? byId(featured.narrationId) : null;
+  const rest = CLAIMS.filter(c => c.id !== featured.id);
+
+  const verdictChip = fn
+    ? (verdictSummary(fn).consensus
+        ? `${esc(fn.gradeLabel)} · ${esc(fn.verdicts[0].scholar)}`
+        : `${verdictSummary(fn).count} rulings held — scholars differ`)
+    : `not in what we hold`;
+
+  const chainChip = fn && fn.chain && fn.chain.length
+    ? `chain of ${fn.chain.length}`
+    : `no chain`;
+
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+
+    <!-- Featured claim — the hero. No branding above it. -->
+    <section class="pt-14 pb-10">
+      <p class="text-[11px] text-dust mb-5">Claim</p>
+      <h1 class="claim-hero-text">“${esc(featured.text)}”</h1>
+      <p class="text-[12px] text-dust mt-6 leading-[1.7]">
+        attributed to Muhammad${hon('{{saw}}')} · ${verdictChip} · ${chainChip}
+      </p>
+
+      <div class="tiles" role="navigation" aria-label="Trace this claim">
+        <a class="tile" href="#/claim/${esc(featured.id)}#chain">
+          <span class="tile-label">Trace it</span>
+          <span class="tile-meta">The chain, on a map</span>
+        </a>
+        <a class="tile" href="#/claim/${esc(featured.id)}#verdicts">
+          <span class="tile-label">What scholars say</span>
+          <span class="tile-meta">${fn && fn.verdicts ? fn.verdicts.length : 0} rulings held</span>
+        </a>
+        <a class="tile" href="#/claim/${esc(featured.id)}#science">
+          <span class="tile-label">What science says</span>
+          <span class="tile-meta">${fn && fn.science ? esc(fn.science.state) : '—'}</span>
+        </a>
+        <a class="tile" href="#/claim/${esc(featured.id)}#doubt">
+          <span class="tile-label">What we don't know</span>
+          <span class="tile-meta">${fn && fn.doubt ? fn.doubt.length : 0} open notes</span>
+        </a>
+      </div>
+
+      <div class="mt-7">
+        <a href="#/claim/${esc(featured.id)}" class="btn">Open the claim</a>
+      </div>
+    </section>
+
+    <hr class="hairline" />
+
+    <!-- Claim feed -->
+    <section class="pt-10 pb-6">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 class="text-[13px] text-dust">More claims</h2>
+        <a href="#/claims" class="text-[11px] text-dust hover:text-vellum no-underline">all →</a>
+      </div>
+      ${rest.map(renderClaimCard).join('')}
+    </section>
+
+    <hr class="hairline" />
+
+    <!-- Secondary entry — sections -->
+    <section class="py-10">
+      <div class="flex items-baseline justify-between mb-4">
+        <h2 class="text-[13px] text-dust">Browse by surface</h2>
+        <a href="#/theme" class="text-[11px] text-dust hover:text-vellum no-underline">theme →</a>
+      </div>
+      <div class="text-[12px] text-dust leading-[1.7] max-w-[46ch]">
+        Ten doors, cut from fiqh chapters to life surfaces. Sections are ours — editorial, versioned,
+        attributed. Every card also carries its canonical address.
+      </div>
+    </section>
+
+  </div>`;
+}
+
+/* ── Claim detail — the five-part unit ────────────────────────── */
+function viewClaim(claimId) {
+  const claim = claimById(claimId);
+  if (!claim) return viewNotFound();
+
+  /* A claim with no narration in corpus goes straight to the
+     boundary screen. Absence here is not absence from tradition. */
+  if (claim.notfound || !claim.narrationId) {
+    return `
+    <div class="max-w-[46rem] mx-auto px-5">
+      <div class="pt-14 pb-6">
+        <p class="text-[11px] text-dust mb-5">Claim</p>
+        <h1 class="claim-hero-text">“${esc(claim.text)}”</h1>
+      </div>
+      <div class="boundary">
+        <h2 class="text-[20px] text-vellum font-normal">Not in what we hold</h2>
+        <p class="text-[14px] leading-[1.85] text-vellum mt-6 max-w-[46ch]">
+          This isn't absence from the tradition. It's the edge of our corpus.
+        </p>
+        <p class="text-[13px] leading-[1.85] text-dust mt-4 max-w-[46ch] tabular-nums">
+          Searched 50,884 narrations across 17 collections. Musnad Aḥmad chapters 8–30 are missing from our source data.
+          The Arabic collections are indexed far more completely than the English.
+        </p>
+        <div class="flex flex-wrap gap-3 mt-8">
+          <a href="#/verify" class="btn">Search the Arabic instead</a>
+          <a href="#/coverage" class="btn-ghost">See the coverage manifest</a>
+        </div>
+        <p class="text-[12px] leading-[1.8] text-dust mt-10 max-w-[46ch]">
+          We are not telling you this saying is fabricated. We are telling you we cannot place it.
+          Those are different sentences, and the difference is the whole point of this page.
+        </p>
+      </div>
+    </div>`;
+  }
+
+  const n = byId(claim.narrationId);
+  if (!n) return viewNotFound();
+
+  const arabicText = ar(n.arabic);
+
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="claim-page">
+
+      <!-- Claim hero -->
+      <section class="pt-12 pb-8 relative">
+        <span class="claim-spine" aria-hidden="true" style="top:3rem; bottom:-3rem;"></span>
+        <p class="text-[11px] text-dust mb-5">Claim</p>
+        <h1 class="claim-hero-text">“${esc(claim.text)}”</h1>
+        <p class="text-[12px] text-dust mt-6 leading-[1.7]">
+          attributed to Muhammad${hon('{{saw}}')}
+        </p>
+
+        <!-- Four tiles -->
+        <div class="tiles" role="navigation" aria-label="Trace this claim">
+          <a class="tile" href="#chain">
+            <span class="tile-label">Trace it</span>
+            <span class="tile-meta">${n.chain.length ? `chain of ${n.chain.length}` : 'no chain'}</span>
+          </a>
+          <a class="tile" href="#verdicts">
+            <span class="tile-label">What scholars say</span>
+            <span class="tile-meta">${n.verdicts ? n.verdicts.length : 0} rulings held</span>
+          </a>
+          <a class="tile" href="#science">
+            <span class="tile-label">What science says</span>
+            <span class="tile-meta">${n.science ? esc(n.science.state) : '—'}</span>
+          </a>
+          <a class="tile" href="#doubt">
+            <span class="tile-label">What we don't know</span>
+            <span class="tile-meta">${n.doubt ? n.doubt.length : 0} open notes</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- 01 · The text -->
+      <section class="part" id="text">
+        <span class="claim-spine" aria-hidden="true"></span>
+        <div class="part-num">01 — the text</div>
+
+        ${arabicText ? `<p class="ar" lang="ar" dir="rtl" style="margin-top:0;">${esc(arabicText)}</p>` : ''}
+
+        <p class="trans" style="font-size:19px;">${esc(n.translation)}</p>
+        <p class="trans-note">${esc(n.translator)}</p>
+
+        <p class="narrator">Narrated by ${esc(n.narrator)}</p>
+
+        <div class="prov">
+          <div><b>${esc(n.collection)}</b> ${esc(n.number)}</div>
+          <div>${esc(n.book)} ${esc(n.ref)}</div>
+          ${n.verifyNote ? `<div class="mt-1">${esc(n.verifyNote)}</div>` : ''}
+        </div>
+      </section>
+
+      <!-- 02 · The chain -->
+      <section class="part" id="chain">
+        <span class="claim-spine" aria-hidden="true"></span>
+        <div class="part-num">02 — the chain</div>
+
+        ${n.chain.length ? `
+          <p class="plain" style="max-width:52ch;">
+            This sentence reached you through ${n.chain.length} named people across ${timeSpan(n)} years, and here they are.
+          </p>
+
+          ${renderChainMap(n)}
+
+          <details class="mt-8 group">
+            <summary class="cursor-pointer text-[12px] text-amber list-none flex items-center gap-2">
+              <span class="group-open:rotate-180 transition-transform inline-block">⌄</span>
+              <span>Show full chain as list</span>
+            </summary>
+            <div class="mt-4 pl-0">
+              ${n.chain.map(c => `
+                <div class="py-3 border-b border-edge last:border-0">
+                  <div class="text-[13px] text-vellum">
+                    ${esc(c.name)}${c.ar ? `<span class="ar-name ml-2" lang="ar" dir="rtl" style="font-family:Amiri,serif; color:#8A867F; font-size:14px;">${esc(ar(c.ar) || c.ar)}</span>` : ''}
+                  </div>
+                  <div class="text-[11px] text-dust mt-1 leading-[1.6]">
+                    ${esc(c.place)} · ${esc(c.died)} · ${esc(c.verdict)}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </details>
+        ` : `
+          <p class="text-[14px] leading-[1.85] text-vellum max-w-[46ch]">
+            There is no chain. No one narrates this in the transmission record. The absence is the finding.
+          </p>
+        `}
+      </section>
+
+      <!-- 03 · The verdicts -->
+      <section class="part" id="verdicts">
+        <span class="claim-spine" aria-hidden="true"></span>
+        <div class="part-num">03 — the verdicts</div>
+        <p class="text-[13px] leading-[1.8] text-dust max-w-[52ch] mb-6">
+          A grade is not a fact. It is a ruling by a named scholar. al-Albānī and Ibn Ḥajar can differ, and where they do,
+          the difference is what you are looking at.
+        </p>
+        ${renderVerdicts(n)}
+      </section>
+
+      <!-- 04 · The science -->
+      <section class="part" id="science">
+        <span class="claim-spine" aria-hidden="true"></span>
+        <div class="part-num">04 — the science</div>
+        ${renderScience(n)}
+      </section>
+
+      <!-- 05 · The doubt -->
+      <section class="part" id="doubt">
+        <span class="claim-spine" aria-hidden="true"></span>
+        <div class="part-num">05 — what we don't know</div>
+        <p class="text-[13px] leading-[1.8] text-dust max-w-[52ch] mb-4">
+          This is the section no other app has, and it is the reason a journalist or a professor would cite us.
+          The doubt is not a weakness. The doubt is the product.
+        </p>
+        ${renderDoubt(n)}
+      </section>
+
+      <!-- Share card -->
+      <section class="py-12">
+        <p class="text-[12px] text-dust mb-4">Share card preview</p>
+        ${renderShareCard(n, claim)}
+        <p class="text-[11px] text-dust mt-4 leading-[1.7] max-w-[46ch]">
+          Screenshots of this card carry their own provenance. That is the point.
+        </p>
+      </section>
+
+    </div>
+  </div>`;
+}
+
+/* Time span from earliest to latest death-year in the chain. */
+function timeSpan(n) {
+  if (!n.chain || !n.chain.length) return '—';
+  const years = n.chain
+    .map(c => {
+      const m = String(c.died).match(/(\d+)/);
+      return m ? parseInt(m[1], 10) : null;
+    })
+    .filter(x => x != null);
+  if (years.length < 2) return '—';
+  return Math.max(...years) - Math.min(...years);
+}
+
+/* ── Claims index ─────────────────────────────────────────────── */
+function viewClaims() {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-8">
+      <h1 class="text-[24px] text-vellum font-normal">Claims</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[50ch]">
+        Each entry is a claim people make about the Prophet${hon('{{saw}}')}. Tap one to see its chain,
+        its verdicts, what science says, and what we don't know.
+      </p>
+    </div>
+    <hr class="hairline" />
+    <div class="pb-10">
+      ${CLAIMS.map(renderClaimCard).join('')}
+    </div>
+  </div>`;
+}
+
+/* ── Section page ─────────────────────────────────────────────── */
+function viewSection(id) {
+  const s = sectionById(id);
+  if (!s) return viewNotFound();
+
+  const items = narrationsIn(id);
+  const from = new Set(items.map(n => n.collection)).size || 1;
+
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-10 pb-8">
+      <a href="#/" class="text-[12px] text-dust hover:text-vellum no-underline">← Home</a>
+      <h1 class="text-[24px] text-vellum mt-5 font-normal">${esc(s.name)}</h1>
+      <p class="text-[13px] leading-[1.75] text-dust mt-3 max-w-[48ch]">${esc(s.note)}</p>
+
+      <div class="mt-7 text-[12px] leading-[1.9] text-dust tabular-nums">
+        <div class="text-vellum text-[13px]">${s.count.toLocaleString()} narrations <span class="badge ml-1.5">illustrative</span></div>
+        <div>${Math.round(s.count * 0.63).toLocaleString()} ṣaḥīḥ</div>
+        <div>${Math.round(s.count * 0.22).toLocaleString()} ḥasan</div>
+        <div>${Math.round(s.count * 0.15).toLocaleString()} ḍaʿīf</div>
+        <div>from ${from} collection${from === 1 ? '' : 's'}</div>
+      </div>
+    </div>
+
+    <hr class="hairline" />
+
+    <div class="pb-10">
+      ${items.length
+        ? items.map(renderNarration).join('')
+        : `<div class="boundary">
+             <p class="text-[17px] text-vellum">Nothing indexed here yet.</p>
+             <p class="text-[13px] leading-[1.8] text-dust mt-4 max-w-[44ch]">
+               This section exists but has no narrations mapped to it in the current build.
+               That is a gap in our index, not a claim about the tradition.
+             </p>
+           </div>`}
+    </div>
+  </div>`;
+}
+
+/* ── Theme ────────────────────────────────────────────────────── */
+function viewTheme() {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-8">
+      <h1 class="text-[24px] text-vellum font-normal">Theme</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[48ch]">
+        Ten doors, cut from fiqh chapters into life surfaces. A narration can sit behind several doors at once.
+        You will never see a single breadcrumb path, because there isn't one.
+      </p>
+    </div>
+    <hr class="hairline" />
+    <nav aria-label="Sections" class="pb-10">
+      ${SECTIONS.map(s => `
+        <a class="sec-row" href="#/section/${esc(s.id)}">
+          <span class="rail-nav" aria-hidden="true"></span>
+          <span>
+            <span class="name block">${esc(s.name)}</span>
+            <span class="text-[11px] text-dust block mt-0.5 max-w-[40ch] leading-[1.6]">${esc(s.note)}</span>
+          </span>
+          <span class="count">${s.count.toLocaleString()}</span>
+        </a>
+      `).join('')}
+    </nav>
+  </div>`;
+}
+
+/* ── Read ─────────────────────────────────────────────────────── */
+function viewRead() {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-8">
+      <h1 class="text-[24px] text-vellum font-normal">Read</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[48ch]">
+        Collection, then book, then chapter — the order the compiler chose, not ours.
+      </p>
+    </div>
+    <hr class="hairline" />
+    <div class="pb-10">
+      ${COLLECTIONS.map(c => `
+        <div class="sec-row" style="cursor:default">
+          <span class="rail-nav" aria-hidden="true"></span>
+          <span>
+            <span class="name block">${esc(c.name)}</span>
+            ${c.note ? `<span class="text-[11px] text-dust block mt-0.5">${esc(c.note)}</span>` : ''}
+          </span>
+          <span class="count text-dust">—</span>
+        </div>
+      `).join('')}
+    </div>
+    <p class="text-[12px] leading-[1.8] text-dust pb-12 max-w-[48ch]">
+      Browsing is not wired in this prototype. The claim page and the verify flow are the two things worth reviewing here.
+    </p>
+  </div>`;
+}
+
+/* ── Verify ───────────────────────────────────────────────────── */
+function viewVerify(prefill) {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-6">
+      <h1 class="text-[24px] text-vellum font-normal">Verify a quote</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[50ch]">
+        Paste anything forwarded to you. You will get one of three answers: found and graded,
+        in our corpus but not graded, or not in what we hold — and those last two are different claims.
+      </p>
+    </div>
+
+    <form id="verifyForm" class="pb-8" autocomplete="off">
+      <label for="vq" class="block text-[12px] text-dust mb-2">The quote, in Arabic or English</label>
+      <textarea id="vq" rows="4" placeholder="Paste a forwarded message, a screenshot transcription, or a citation…">${prefill ? esc(prefill) : ''}</textarea>
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <button type="submit" class="btn">Check</button>
+        <span class="text-[11px] text-dust">or try:</span>
+        <button type="button" class="chip" data-example="Actions are only by intentions">intention</button>
+        <button type="button" class="chip" data-example="Love of one's country is part of faith">a circulating saying</button>
+      </div>
+    </form>
+
+    <hr class="hairline" />
+    <div id="verifyOut" class="pb-16" aria-live="polite"></div>
+  </div>`;
+}
+
+function renderVerifyResult(res) {
+  if (!res) return '';
+
+  if (res.state === 'found') {
+    const c = claimById(res.claimId);
+    const n = byId(res.narrationId);
+    if (!c || !n) return '';
+
+    /* Route to the claim page — the five-part unit. That is the answer. */
+    return `
+      <div class="pt-8 pb-4">
+        <p class="text-[12px] text-dust mb-4">Found — 1 match</p>
+        <h2 class="claim-hero-text" style="font-size:22px; margin-bottom:1.25rem;">“${esc(c.text)}”</h2>
+        <div class="text-[12px] text-dust leading-[1.7] mb-6 tabular-nums">
+          ${esc(n.gradeLabel)} · ${esc(n.verdicts[0] ? n.verdicts[0].scholar : '—')} · ${esc(n.collection)} ${esc(n.number)}
+        </div>
+        <a href="#/claim/${esc(c.id)}" class="btn">Open the full claim</a>
+      </div>`;
+  }
+
+  if (res.state === 'notfound') {
+    return `
+      <div class="boundary">
+        <h2 class="text-[20px] text-vellum font-normal">Not in what we hold</h2>
+
+        <p class="text-[13px] leading-[1.9] text-dust mt-6 max-w-[46ch] tabular-nums">
+          Searched ${res.searched.toLocaleString()} narrations across ${res.collections} collections.
+        </p>
+
+        <p class="text-[14px] leading-[1.85] text-vellum mt-6 max-w-[46ch]">
+          This isn't absence from the tradition. It's the edge of our corpus.
+        </p>
+
+        <p class="text-[13px] leading-[1.85] text-dust mt-4 max-w-[46ch]">
+          Musnad Aḥmad chapters 8–30 are missing from our source data.
+          The Arabic collections are indexed far more completely than the English.
+        </p>
+
+        <div class="flex flex-wrap gap-3 mt-8">
+          <button type="button" class="btn-ghost" data-retry-arabic>Search the Arabic instead</button>
+          <a href="#/coverage" class="btn-ghost">See the coverage manifest</a>
+        </div>
+
+        <p class="text-[12px] leading-[1.8] text-dust mt-10 max-w-[46ch]">
+          We are not telling you this saying is fabricated. We are telling you we cannot place it.
+          Those are different sentences, and the difference is the whole point of this page.
+        </p>
+      </div>`;
+  }
+
+  return '';
+}
+
+/* ── Coverage ─────────────────────────────────────────────────── */
+function viewCoverage() {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-8">
+      <h1 class="text-[24px] text-vellum font-normal">Coverage manifest</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[52ch]">
+        Every answer this app gives is bounded by what it holds. This page states the bounds.
+        In production it is wired into retrieval, so a result carries its own edge with it.
+      </p>
+    </div>
+
+    <section class="pb-10">
+      <h2 class="text-[13px] text-dust mb-3">Corpus</h2>
+      <div class="count-row"><span class="k">Narrations indexed</span><span class="v">50,884 <span class="badge ml-1">hadith-json</span></span></div>
+      <div class="count-row"><span class="k">Collections</span><span class="v">17</span></div>
+      <div class="count-row"><span class="k">With English translation</span><span class="v text-dust">licensing unresolved</span></div>
+      <div class="count-row"><span class="k">With a grading ruling attached</span><span class="v text-dust">partial</span></div>
+      <div class="count-row"><span class="k">With a verified isnad</span><span class="v text-dust">not yet ingested</span></div>
+    </section>
+
+    <hr class="hairline" />
+
+    <section class="py-10">
+      <h2 class="text-[13px] text-dust mb-3">Known gaps</h2>
+      <ul class="text-[13px] leading-[1.9] text-dust list-none p-0 m-0">
+        <li class="pb-3">— Musnad Aḥmad chapters 8–30 are absent from the upstream source data.</li>
+        <li class="pb-3">— English coverage is materially thinner than Arabic. The exact ratio is not established and we do not publish a number for it.</li>
+        <li class="pb-3">— Asbāb al-wurūd (occasions of revelation for a narration) is unknown for the overwhelming majority of reports. Al-Suyūṭī says in his own introduction that he combed the primary books and found only scattered instances.</li>
+      </ul>
+    </section>
+
+    <hr class="hairline" />
+
+    <section class="py-10">
+      <h2 class="text-[13px] text-dust mb-3">Collection sizes are not settled</h2>
+      <p class="text-[13px] leading-[1.9] text-dust max-w-[52ch]">
+        Ṣaḥīḥ al-Bukhārī is counted at 7,563 by ʿAbd al-Bāqī and 7,208 by Khaldūn al-Ahdab. Musnad Aḥmad is given
+        as ≈28,199 by one source and over 30,000 by another. This is why every number in this app carries a
+        source and a date, including counts.
+      </p>
+    </section>
+
+    <hr class="hairline" />
+
+    <section class="py-10">
+      <h2 class="text-[13px] text-dust mb-3">Open blocker — translation licensing</h2>
+      <p class="text-[13px] leading-[1.9] text-dust max-w-[52ch]">
+        The widely circulated English translations are copyrighted by their publishers. A prototype may use
+        samples. A shipped product may not. Until this is resolved, every English line here is marked as a
+        working translation rather than a licensed edition.
+      </p>
+    </section>
+
+    <hr class="hairline" />
+
+    <section class="py-10">
+      <h2 class="text-[13px] text-dust mb-3">Editorial layer</h2>
+      <p class="text-[13px] leading-[1.9] text-dust max-w-[52ch]">
+        Section assignments are a fiqh judgement, not a fact. They are stored as a mapping table with
+        <span class="text-vellum">assigned_by</span> and <span class="text-vellum">version</span>, so they can be
+        revised and audited without touching the corpus.
+      </p>
+    </section>
+  </div>`;
+}
+
+/* ── How ─────────────────────────────────────────────────────── */
+function viewHow() {
+  const n = byId('bukhari-1');
+  state.expanded.add('bukhari-1');
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="pt-12 pb-8">
+      <a href="#/" class="text-[12px] text-dust hover:text-vellum no-underline">← Home</a>
+      <h1 class="text-[24px] text-vellum font-normal mt-5">How a chain works</h1>
+      <p class="text-[14px] leading-[1.8] text-dust mt-4 max-w-[50ch]">
+        This sentence reached you through five named people across two hundred years, and here they are.
+        The rule down the left is not decoration — it is the chain, collapsed.
+      </p>
+    </div>
+
+    <hr class="hairline" />
+
+    <div class="pt-10 pb-4">
+      <p class="text-[11px] text-dust mb-5">Example — chain map</p>
+      ${renderChainMap(n)}
+    </div>
+
+    <hr class="hairline" />
+
+    <section class="py-10">
+      <h2 class="text-[13px] text-dust mb-5">Reading the rail</h2>
+      <div class="space-y-5 text-[13px] leading-[1.8] text-dust max-w-[50ch]">
+        <p><span class="text-vellum">Unbroken, full weight</span> — the chain is intact and every narrator in it is trusted. Ṣaḥīḥ.</p>
+        <p><span class="text-vellum">Unbroken, lighter</span> — the chain is intact but at least one narrator is weaker in memory than the standard requires. Ḥasan.</p>
+        <p><span class="text-vellum">Gapped</span> — the defect is a break. Ḍaʿīf.</p>
+        <p><span class="text-vellum">Absent</span> — there is no chain to draw. Mawḍūʿ.</p>
+      </div>
+      <p class="text-[12px] leading-[1.8] text-dust mt-8 max-w-[50ch]">
+        Grade consumes no colour in this interface. It lives entirely in weight and continuity, so it survives
+        greyscale, screenshots and colourblindness. Amber is reserved for interaction.
+      </p>
+    </section>
+  </div>`;
+}
+
+/* ── Not found ────────────────────────────────────────────────── */
+function viewNotFound() {
+  return `
+  <div class="max-w-[46rem] mx-auto px-5">
+    <div class="boundary">
+      <h1 class="text-[20px] text-vellum font-normal">Not in what we hold</h1>
+      <p class="text-[14px] leading-[1.85] text-vellum mt-6 max-w-[46ch]">
+        This isn't absence from the tradition. It's the edge of our corpus.
+      </p>
+      <p class="text-[13px] leading-[1.85] text-dust mt-4 max-w-[46ch] tabular-nums">
+        Searched 50,884 narrations across 17 collections.
+        Musnad Aḥmad chapters 8–30 are missing from our source data.
+      </p>
+      <div class="flex flex-wrap gap-3 mt-8">
+        <a href="#/verify" class="btn">Verify something</a>
+        <a href="#/coverage" class="btn-ghost">Coverage manifest</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUTER
+   ═══════════════════════════════════════════════════════════════ */
+const app = document.getElementById('app');
+
+function render() {
+  const hash = location.hash.slice(1) || '/';
+  const anchor = hash.includes('#') ? hash.split('#')[1] : '';
+  const path = hash.split('#')[0];
+  const parts = path.split('/').filter(Boolean);
+  const head = parts[0] || '';
+
+  let html = '';
+  let navKey = '';
+
+  if (head === '') {
+    html = viewHome();
+  } else if (head === 'claim' && parts[1]) {
+    html = viewClaim(parts[1]);
+  } else if (head === 'claims') {
+    html = viewClaims(); navKey = 'claims';
+  } else if (head === 'verify') {
+    html = viewVerify(); navKey = 'verify';
+  } else if (head === 'read') {
+    html = viewRead(); navKey = 'read';
+  } else if (head === 'theme') {
+    html = viewTheme(); navKey = 'theme';
+  } else if (head === 'coverage') {
+    html = viewCoverage(); navKey = 'coverage';
+  } else if (head === 'how') {
+    html = viewHow();
+  } else if (head === 'section' && parts[1]) {
+    html = viewSection(parts[1]); navKey = 'theme';
+  } else {
+    html = viewNotFound();
+  }
+
+  app.innerHTML = html;
+
+  document.querySelectorAll('[data-nav]').forEach(a => {
+    const on = a.dataset.nav === navKey;
+    a.classList.toggle('text-vellum', on);
+    a.classList.toggle('text-dust', !on);
+  });
+
+  // If a hash-anchor was requested, scroll to it after render.
+  if (anchor) {
+    const el = document.getElementById(anchor);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        window.scrollBy(0, -70);
+      }, 30);
+    }
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+}
+
+window.addEventListener('hashchange', render);
+
+/* ═══════════════════════════════════════════════════════════════
+   INTERACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('click', e => {
+
+  // chain toggle (vertical, inside narration card)
+  const toggle = e.target.closest('[data-toggle]');
+  if (toggle) {
+    const id = toggle.dataset.toggle;
+    if (state.expanded.has(id)) state.expanded.delete(id);
+    else state.expanded.add(id);
+    render();
+    const back = document.getElementById('h-' + id);
+    if (back && state.expanded.has(id)) {
+      back.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      window.scrollBy(0, -80);
+    }
+    return;
+  }
+
+  // disagreement toggle
+  if (e.target.closest('[data-toggle-disagreement]')) {
+    state.showDisagreement = !state.showDisagreement;
+    save('disagreement', state.showDisagreement);
+    // Preserve scroll position on verdicts section
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+    return;
+  }
+
+  // chain-map play
+  const play = e.target.closest('[data-play-chain]');
+  if (play) {
+    const id = play.dataset.playChain;
+    if (state.chainPlay.has(id)) state.chainPlay.delete(id);
+    state.chainPlay.add(id);
+    // Trigger re-render then immediately clear so replay works next time
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+    setTimeout(() => { state.chainPlay.delete(id); }, 2400);
+    return;
+  }
+
+  // verify examples
+  const ex = e.target.closest('[data-example]');
+  if (ex) {
+    const ta = document.getElementById('vq');
+    if (ta) { ta.value = ex.dataset.example; ta.focus(); }
+    return;
+  }
+
+  // retry-as-arabic
+  if (e.target.closest('[data-retry-arabic]')) {
+    const ta = document.getElementById('vq');
+    if (ta) { ta.value = ''; ta.placeholder = 'اكتب العبارة العربية هنا…'; ta.focus(); }
+    const out = document.getElementById('verifyOut');
+    if (out) out.innerHTML = '';
+    return;
+  }
+});
+
+// verify submit
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'verifyForm') return;
+  e.preventDefault();
+  const q = document.getElementById('vq').value.trim();
+  document.getElementById('verifyOut').innerHTML = renderVerifyResult(runVerify(q));
+});
+
+function runVerify(q) {
+  if (!q) return null;
+  const norm = q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  if (!norm) return null;
+
+  // Match against known claims by keyword.
+  const KEYS = {
+    'intentions':      ['intention', 'intentions', 'niyyah', 'niyya', 'actions are only by'],
+    'brother-love':    ['loves for his brother', 'none of you believes', 'brother what he loves'],
+    'sale-option':     ['two parties to a sale', 'option so long as', 'sale retain'],
+    'strong-believer': ['strong believer', 'more beloved', 'weak believer'],
+    '360-joints':      ['360 joints', 'three hundred and sixty', 'joints in the human body'],
+  };
+
+  for (const [claimId, keys] of Object.entries(KEYS)) {
+    if (keys.some(k => norm.includes(k))) {
+      const c = claimById(claimId);
+      if (c && c.narrationId) {
+        return { state: 'found', claimId, narrationId: c.narrationId };
+      }
+    }
+  }
+
+  // Anything else → boundary. This is the honest default.
+  return { state: 'notfound', searched: 50884, collections: 17 };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SETTINGS
+   ═══════════════════════════════════════════════════════════════ */
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+
+function renderSettings() {
+  settingsPanel.innerHTML = `
+    <p class="text-[11px] text-dust mb-2">Display</p>
+    <div class="sw">
+      <div>
+        <label for="set-hon">Show honorifics</label>
+        <div class="sub">ﷺ after the Prophet's name</div>
+      </div>
+      <input type="checkbox" id="set-hon" ${state.honorifics ? 'checked' : ''}>
+    </div>
+    <div class="sw">
+      <div>
+        <label for="set-ar">Show Arabic</label>
+        <div class="sub">Primary text above the translation</div>
+      </div>
+      <input type="checkbox" id="set-ar" ${state.arabic ? 'checked' : ''}>
+    </div>
+    <div class="sw">
+      <div>
+        <label for="set-tash">Show diacritics</label>
+        <div class="sub">Tashkīl on the Arabic text</div>
+      </div>
+      <input type="checkbox" id="set-tash" ${state.tashkeel ? 'checked' : ''}>
+    </div>
+    <div class="sw" style="border-top:1px solid #1E1D1F; margin-top:.5rem; padding-top:.75rem;">
+      <div>
+        <label for="set-dis">Show all rulings</label>
+        <div class="sub">Where scholars differ, show all</div>
+      </div>
+      <input type="checkbox" id="set-dis" ${state.showDisagreement ? 'checked' : ''}>
+    </div>
+  `;
+}
+
+settingsBtn.addEventListener('click', () => {
+  const open = !settingsPanel.classList.contains('hidden');
+  if (open) {
+    settingsPanel.classList.add('hidden');
+    settingsBtn.setAttribute('aria-expanded', 'false');
+  } else {
+    renderSettings();
+    settingsPanel.classList.remove('hidden');
+    settingsBtn.setAttribute('aria-expanded', 'true');
+  }
+});
+
+settingsPanel.addEventListener('change', e => {
+  if (e.target.id === 'set-hon')  { state.honorifics = e.target.checked; save('honorifics', state.honorifics); }
+  if (e.target.id === 'set-ar')   { state.arabic     = e.target.checked; save('arabic', state.arabic); }
+  if (e.target.id === 'set-tash') { state.tashkeel   = e.target.checked; save('tashkeel', state.tashkeel); }
+  if (e.target.id === 'set-dis')  { state.showDisagreement = e.target.checked; save('disagreement', state.showDisagreement); }
+  const y = window.scrollY;
+  render();
+  window.scrollTo(0, y);
+});
+
+document.addEventListener('click', e => {
+  if (!settingsPanel.classList.contains('hidden') &&
+      !settingsPanel.contains(e.target) &&
+      !settingsBtn.contains(e.target)) {
+    settingsPanel.classList.add('hidden');
+    settingsBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !settingsPanel.classList.contains('hidden')) {
+    settingsPanel.classList.add('hidden');
+    settingsBtn.setAttribute('aria-expanded', 'false');
+    settingsBtn.focus();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+render();
+</script>
+</body>
+</html>
